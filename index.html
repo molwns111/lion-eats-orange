@@ -27,7 +27,7 @@
     <div class="stat"><div class="label">得分</div><div class="value" id="score">0</div></div>
     <div class="stat"><div class="label">最高分</div><div class="value" id="best">0</div></div>
     <div class="stat grow"><div class="label">连击 <span id="comboText">×0</span> · 倍率 <span id="multText">×1</span></div><div class="combo-bar"><div class="combo-fill" id="comboFill"></div></div></div>
-    <div class="stat"><div class="label"><span id="modeText">第 1 关</span> · 生命</div><div class="lives" id="lives">🦁🦁🦁</div></div>
+    <div class="stat"><div class="label"><span id="modeText">第 1 关</span> · 生命</div><div class="lives" id="lives">🦁🦁🦁🦁🦁🦁🦁🦁🦁🦁</div></div>
     <button class="icon-btn" id="soundBtn" aria-label="声音开关" title="声音开关">🔊</button>
     <button class="icon-btn" id="pauseBtn" aria-label="暂停" title="暂停">⏸</button>
   </div>
@@ -50,8 +50,8 @@
 
   <div class="controls" aria-label="游戏控制">
     <button class="control-btn" id="leftBtn">◀ 左</button>
-    <button class="control-btn" id="rightBtn">右 ▶</button>
     <button class="control-btn" id="jumpBtn">↑ 跳</button>
+    <button class="control-btn" id="rightBtn">右 ▶</button>
     <button class="control-btn" id="crouchBtn">↓ 蹲</button>
     <button class="control-btn action" id="biteBtn">咬！</button>
   </div>
@@ -65,7 +65,7 @@
   var W=900,H=500,GROUND=414;
   var scoreEl=document.getElementById("score"),bestEl=document.getElementById("best"),comboText=document.getElementById("comboText"),multText=document.getElementById("multText"),comboFill=document.getElementById("comboFill"),modeText=document.getElementById("modeText"),livesEl=document.getElementById("lives");
   var startOverlay=document.getElementById("startOverlay"),overOverlay=document.getElementById("overOverlay"),pauseOverlay=document.getElementById("pauseOverlay"),finalScore=document.getElementById("finalScore"),finalDetail=document.getElementById("finalDetail"),finalBest=document.getElementById("finalBest");
-  var state="ready",phase="fruit",score=0,best=0,combo=0,maxCombo=0,eaten=0,lives=3,level=1,bossWins=0,nextBossAt=12;
+  var state="ready",phase="fruit",score=0,best=0,combo=0,maxCombo=0,eaten=0,lives=10,level=1,bossWins=0,nextBossAt=12;
   var oranges=[],fireballs=[],particles=[],popups=[],spawnTimer=.5,biteAnim=0,sickTimer=0,invincible=0,shake=0,toast=null,lastTime=performance.now(),rafId=null;
   var lion={x:690,y:0,vy:0,vx:0,onGround:true,run:0,crouch:0};
   var boss=null,cutscene=0,miniOrange=null,inputs={left:false,right:false,crouch:false};
@@ -77,9 +77,9 @@
   function tone(freq,dur,type,vol,to){if(!soundOn||!audioCtx)return;var t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type||"sine";o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+dur);g.gain.setValueAtTime(vol||.12,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(t+dur)}
   function sChomp(){tone(230,.09,"square",.1,75);tone(520,.07,"sine",.08,250)}function sJump(){tone(260,.12,"sine",.08,480)}function sBad(){tone(150,.3,"sawtooth",.1,55)}function sHit(){tone(90,.22,"square",.13,45)}function sBoss(){tone(110,.38,"sawtooth",.1,65);setTimeout(function(){tone(82,.42,"square",.09,45)},120)}function sWin(){[523,659,784,1047].forEach(function(f,i){setTimeout(function(){tone(f,.18,"sine",.1)},i*100)})}
 
-  function updateHUD(){scoreEl.textContent=score;bestEl.textContent=best;comboText.textContent="×"+combo;multText.textContent="×"+mult();comboFill.style.width=((combo%8)/8*100)+"%";modeText.textContent=phase==="boss"?"BOSS战":phase==="victory"?"胜利！":"第 "+level+" 关";var s="";for(var i=0;i<3;i++)s+=i<lives?"🦁":'<span class="off">🦁</span>';livesEl.innerHTML=s}
+  function updateHUD(){scoreEl.textContent=score;bestEl.textContent=best;comboText.textContent="×"+combo;multText.textContent="×"+mult();comboFill.style.width=((combo%8)/8*100)+"%";modeText.textContent=phase==="boss"?"BOSS战":phase==="victory"?"胜利！":"第 "+level+" 关";var s="";for(var i=0;i<10;i++)s+=i<lives?"🦁":'<span class="off">🦁</span>';livesEl.innerHTML=s}
   function popScore(){scoreEl.classList.remove("pop");void scoreEl.offsetWidth;scoreEl.classList.add("pop")}
-  function reset(){score=combo=maxCombo=eaten=bossWins=0;lives=3;level=1;nextBossAt=12;phase="fruit";oranges=[];fireballs=[];particles=[];popups=[];boss=null;miniOrange=null;cutscene=0;spawnTimer=.45;biteAnim=sickTimer=invincible=shake=0;toast=null;lion.x=690;lion.y=lion.vy=lion.vx=0;lion.crouch=0;lion.onGround=true;inputs.crouch=false;updateHUD()}
+  function reset(){score=combo=maxCombo=eaten=bossWins=0;lives=10;level=1;nextBossAt=12;phase="fruit";oranges=[];fireballs=[];particles=[];popups=[];boss=null;miniOrange=null;cutscene=0;spawnTimer=.45;biteAnim=sickTimer=invincible=shake=0;toast=null;lion.x=690;lion.y=lion.vy=lion.vx=0;lion.crouch=0;lion.onGround=true;inputs.crouch=false;updateHUD()}
   function startGame(){ensureAudio();reset();state="playing";startOverlay.hidden=true;overOverlay.hidden=true;pauseOverlay.hidden=true;lastTime=performance.now()}
   function gameOver(){state="over";if(score>best)best=score;updateHUD();finalScore.textContent=score;finalDetail.textContent="吃掉 "+eaten+" 个橙子 · 打败 "+bossWins+" 个大王 · 最高连击 "+maxCombo;finalBest.textContent=score===best&&score>0?"新纪录！":"最高分 "+best;overOverlay.hidden=false}
   function togglePause(){if(state==="playing"){state="paused";pauseOverlay.hidden=false}else if(state==="paused"){state="playing";pauseOverlay.hidden=true;lastTime=performance.now()}}
